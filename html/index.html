@@ -2,22 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <title>EditingList</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>editingList</title>
-  <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="/styles/style.css" />
 </head>
 <body>
   <header>
-    <h1>OmniEdit</h1>
+    <h1>📝 EditingList</h1>
     <button id="saveBtn">💾 Save</button>
   </header>
 
   <main>
-    <div id="editor-container">
-      <textarea id="editor" placeholder="Start typing..."></textarea>
-    </div>
+    <textarea id="editor" placeholder="Start typing..."></textarea>
+    <p id="typingStatus"></p>
   </main>
 
-  <script src="./editor.js"></script>
+  <script type="module" src="../editor.js"></script>
 </body>
 </html>
