@@ -11,25 +11,25 @@ import {
   setTypingTimeout
 } from './api.js';
 
+// DOM Elements
 const editor = document.getElementById('editor');
 const saveBtn = document.getElementById('saveBtn');
 const typingStatus = document.getElementById('typingStatus');
+const fileInput = document.getElementById('fileInput');
 
-const listId = '1';          // Could be dynamic
-const userId = 'user123';    // Should match auth/session later
+// User + List context
+const listId = '1';       // Make dynamic later
+const userId = 'user123'; // Replace with session value
 const roomId = createRoomId(listId, userId);
 
-// Load list + setup real-time
-(async () => {
+// Load initial content + join real-time session
+(async function initEditor() {
   try {
-    // 1. Join the real-time editing room
     joinCollaborativeSession(roomId, 'dummy-token');
-
-    // 2. Load list content
+    
     const data = await viewList(listId, userId);
     editor.value = data.list.content;
 
-    // 3. Setup real-time handlers
     setRealTimeHandlers({
       onListUpdated: (update) => {
         if (update.operation === 'update_item') {
@@ -38,20 +38,18 @@ const roomId = createRoomId(listId, userId);
       },
       onUserTyping: () => {
         typingStatus.textContent = 'Someone is typing...';
-        setTimeout(() => {
-          typingStatus.textContent = '';
-        }, 2000);
+        setTimeout(() => (typingStatus.textContent = ''), 2000);
       }
     });
   } catch (err) {
-    alert('Error loading list or connecting: ' + err.message);
+    alert('Error initializing editor: ' + err.message);
   }
 })();
 
-// Save manually
+// Save button click
 saveBtn.addEventListener('click', async () => {
+  const content = editor.value;
   try {
-    const content = editor.value;
     await updateList(listId, userId, { content });
     alert('List saved!');
   } catch (err) {
@@ -59,12 +57,30 @@ saveBtn.addEventListener('click', async () => {
   }
 });
 
-// Live editing
+// Editor live typing
 editor.addEventListener('input', () => {
   const content = editor.value;
 
-  updateItemRealTime(roomId, listId, 0, content); // index 0 = entire doc
-
+  updateItemRealTime(roomId, listId, 0, content);
   startTyping(roomId);
   setTypingTimeout(roomId, 2000);
+});
+
+// File upload
+fileInput?.addEventListener('change', (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = function (e) {
+    editor.value = e.target.result;
+    updateItemRealTime(roomId, listId, 0, editor.value);
+  };
+
+  reader.onerror = function (e) {
+    alert('Error reading file: ' + e.target.error.name);
+  };
+
+  reader.readAsText(file);
 });
