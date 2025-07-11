@@ -9,7 +9,10 @@
 <body>
   <header>
     <h1>📝 EditingList</h1>
-    <button id="saveBtn">💾 Save</button>
+    <div>
+      <input type="file" id="fileInput" accept=".txt,.md,.json,.js,.html,.css" />
+      <button id="saveBtn">💾 Save</button>
+    </div>
   </header>
 
   <main>
@@ -17,6 +20,6 @@
     <p id="typingStatus"></p>
   </main>
 
-  <script type="module" src="../editor.js"></script>
+  <script type="module" src="/scripts/editor.js"></script>
 </body>
 </html>
