@@ -1,25 +1,147 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>EditingList</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="/styles/style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EditingList</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        
+        .file-selector {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .file-label {
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .file-display {
+            display: flex;
+            align-items: center;
+            padding: 5px 10px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+        }
+        
+        .file-name {
+            margin-right: 8px;
+        }
+        
+        .remove-btn {
+            cursor: pointer;
+            color: #888;
+            font-size: 18px;
+            line-height: 1;
+            padding: 0 5px;
+        }
+        
+        .remove-btn:hover {
+            color: #f00;
+        }
+        
+        .choose-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .choose-btn:hover {
+            background-color: #45a049;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            resize: vertical;
+        }
+        
+        .save-btn {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .save-btn:hover {
+            background-color: #0b7dda;
+        }
+    </style>
+    <link rel="stylesheet" href="/styles/style.css" />
 </head>
 <body>
-  <header>
-    <h1>📝 EditingList</h1>
-    <div>
-      <input type="file" id="fileInput" accept=".txt,.md,.json,.js,.html,.css" />
-      <button id="saveBtn">💾 Save</button>
+    <h1>EditingList</h1>
+    
+    <div class="file-selector">
+        <span class="file-label">Choose File</span>
+        <button class="choose-btn" id="chooseBtn">Select File</button>
+        <div class="file-display" id="fileDisplay" style="display: none;">
+            <span class="file-name" id="fileName"></span>
+            <span class="remove-btn" id="removeBtn">×</span>
+        </div>
+        <input type="file" id="fileInput" class="file-input">
     </div>
-  </header>
-
-  <main>
-    <textarea id="editor" placeholder="Start typing..."></textarea>
-    <p id="typingStatus"></p>
-  </main>
-
-  <script type="module" src="/scripts/editor.js"></script>
+    
+    <textarea placeholder="Start typing..."></textarea>
+    
+    <button class="save-btn">Save</button>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chooseBtn = document.getElementById('chooseBtn');
+            const fileInput = document.getElementById('fileInput');
+            const fileDisplay = document.getElementById('fileDisplay');
+            const fileName = document.getElementById('fileName');
+            const removeBtn = document.getElementById('removeBtn');
+            
+            // Handle file selection
+            chooseBtn.addEventListener('click', function() {
+                fileInput.click();
+            });
+            
+            fileInput.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    fileName.textContent = this.files[0].name;
+                    fileDisplay.style.display = 'flex';
+                    chooseBtn.style.display = 'none';
+                }
+            });
+            
+            // Handle file removal
+            removeBtn.addEventListener('click', function() {
+                fileInput.value = '';
+                fileDisplay.style.display = 'none';
+                chooseBtn.style.display = 'block';
+            });
+        });
+    </script>
+    <script type="module" src="../editor.js"></script>
 </body>
 </html>
