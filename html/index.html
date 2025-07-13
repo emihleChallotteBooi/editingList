@@ -98,9 +98,109 @@
         .save-btn:hover {
             background-color: #0b7dda;
         }
+
+        /* Collaboration Panel Styles */
+        .collaboration-panel {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+        }
+
+        .room-id-container {
+            background-color: #e3f2fd;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        .room-id-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .room-id-title {
+            font-weight: bold;
+            color: #0d47a1;
+        }
+
+        .room-id-value {
+            font-family: monospace;
+            background-color: white;
+            padding: 8px;
+            border-radius: 3px;
+            word-break: break-all;
+            margin-bottom: 8px;
+        }
+
+        .copy-btn {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background-color 0.2s;
+        }
+
+        .copy-btn:hover {
+            background-color: #0b7dda;
+        }
+
+        .copy-btn:active {
+            transform: scale(0.98);
+        }
+
+        .user-status {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .typing-indicator {
+            font-style: italic;
+            color: #888;
+            margin-top: 5px;
+            min-height: 20px;
+        }
+
+        .connection-status {
+            margin-top: 10px;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        .connected {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .disconnected {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+
+        .users-list {
+            margin: 10px 0;
+        }
+
+        .user-item {
+            display: inline-block;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            padding: 4px 10px;
+            background-color: #bbdefb;
+            border-radius: 15px;
+            font-size: 13px;
+        }
     </style>
 </head>
-  <body>
+<body>
     <h1>EditingList</h1>
     
     <div class="file-selector">
@@ -110,39 +210,67 @@
         <div class="file-list" id="fileList"></div>
     </div>
     
-    <textarea placeholder="Start typing..."></textarea>
+    <textarea id="editor" placeholder="Start typing..."></textarea>
     
-    <button class="save-btn">Save</button>
-    
+    <button class="save-btn" id="saveBtn">Save</button>
+
+    <!-- Enhanced Collaboration Panel -->
+    <div class="collaboration-panel" id="collabPanel" style="display: none;">
+        <div class="room-id-container">
+            <div class="room-id-header">
+                <span class="room-id-title">ROOM ID</span>
+                <button class="copy-btn" id="copyRoomIdBtn">Copy</button>
+            </div>
+            <div class="room-id-value" id="roomIdDisplay"></div>
+        </div>
+        
+        <div class="users-list" id="usersList"></div>
+        <div class="typing-indicator" id="typingIndicator"></div>
+        <div class="connection-status disconnected" id="connectionStatus">Disconnected</div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
             const chooseBtn = document.getElementById('chooseBtn');
             const fileInput = document.getElementById('fileInput');
             const fileList = document.getElementById('fileList');
-            let selectedFiles = [];
+            const editor = document.getElementById('editor');
+            const saveBtn = document.getElementById('saveBtn');
+            const collabPanel = document.getElementById('collabPanel');
+            const usersList = document.getElementById('usersList');
+            const typingIndicator = document.getElementById('typingIndicator');
+            const connectionStatus = document.getElementById('connectionStatus');
+            const roomIdDisplay = document.getElementById('roomIdDisplay');
+            const copyRoomIdBtn = document.getElementById('copyRoomIdBtn');
             
-            // Handle file selection
+            // App State
+            let selectedFiles = [];
+            let currentRoomId = null;
+            let currentUserId = null;
+            let currentListId = 'default_list_' + Math.random().toString(36).substr(2, 6);
+            let isTyping = false;
+            let typingTimeout = null;
+            let collaborators = [];
+
+            // File Selection Functionality
             chooseBtn.addEventListener('click', function() {
                 fileInput.click();
             });
             
             fileInput.addEventListener('change', function() {
                 if (this.files.length > 0) {
-                    // Add new files to our collection
                     Array.from(this.files).forEach(file => {
                         if (!selectedFiles.some(f => f.name === file.name && f.size === file.size && f.lastModified === file.lastModified)) {
                             selectedFiles.push(file);
                         }
                     });
-                    
                     updateFileList();
                 }
             });
             
-            // Update the displayed file list
             function updateFileList() {
                 fileList.innerHTML = '';
-                
                 selectedFiles.forEach((file, index) => {
                     const fileItem = document.createElement('div');
                     fileItem.className = 'file-item';
@@ -162,13 +290,94 @@
                 });
             }
             
-            // Remove a file from the list
             function removeFile(index) {
                 selectedFiles.splice(index, 1);
                 updateFileList();
             }
+
+            // Collaboration Functions
+            function createRoomId(listId, userId) {
+                return `list_${listId}_user_${userId}`;
+            }
+
+            function initializeCollaboration() {
+                currentUserId = 'user_' + Math.random().toString(36).substr(2, 8);
+                currentRoomId = createRoomId(currentListId, currentUserId);
+                
+                // Update UI
+                roomIdDisplay.textContent = currentRoomId;
+                collabPanel.style.display = 'block';
+                
+                // Setup copy functionality
+                copyRoomIdBtn.addEventListener('click', () => {
+                    navigator.clipboard.writeText(currentRoomId)
+                        .then(() => {
+                            const originalText = copyRoomIdBtn.textContent;
+                            copyRoomIdBtn.textContent = 'Copied!';
+                            setTimeout(() => {
+                                copyRoomIdBtn.textContent = originalText;
+                            }, 2000);
+                        })
+                        .catch(err => {
+                            console.error('Failed to copy:', err);
+                            alert('Failed to copy Room ID. Please copy it manually.');
+                        });
+                });
+
+                // Mock real-time connection
+                simulateRealTimeConnection();
+            }
+
+            function simulateRealTimeConnection() {
+                // Simulate connection establishment
+                setTimeout(() => {
+                    connectionStatus.textContent = 'Connected';
+                    connectionStatus.className = 'connection-status connected';
+                    
+                    // Simulate another user joining
+                    setTimeout(() => {
+                        collaborators.push({
+                            id: 'user_' + Math.random().toString(36).substr(2, 8),
+                            name: 'Collaborator ' + Math.floor(Math.random() * 1000),
+                            socketId: 'socket_' + Math.random().toString(36).substr(2, 5)
+                        });
+                        updateUsersList();
+                    }, 1500);
+                }, 1000);
+            }
+
+            function updateUsersList() {
+                usersList.innerHTML = '';
+                collaborators.forEach(user => {
+                    const userEl = document.createElement('div');
+                    userEl.className = 'user-item';
+                    userEl.textContent = user.name;
+                    usersList.appendChild(userEl);
+                });
+            }
+
+            // Editor Functionality
+            editor.addEventListener('input', function() {
+                if (!isTyping) {
+                    isTyping = true;
+                    typingIndicator.textContent = 'You are typing...';
+                }
+                
+                // Simulate sending updates
+                if (typingTimeout) clearTimeout(typingTimeout);
+                typingTimeout = setTimeout(() => {
+                    isTyping = false;
+                    typingIndicator.textContent = '';
+                }, 2000);
+            });
+
+            saveBtn.addEventListener('click', function() {
+                alert('Content saved successfully!');
+            });
+
+            // Initialize collaboration
+            initializeCollaboration();
         });
     </script>
-    <script type="module" src="../editor.js"></script>
-  </body>
+</body>
 </html>
